@@ -29,7 +29,7 @@ class TodosServiceTest {
 
         @BeforeEach
         fun `set active user`() {
-            userRepository.currentUser = User(
+            userRepository.users[activeUser] = User(
                 username = activeUser,
                 status = User.Status.ACTIVE,
             )
@@ -58,7 +58,7 @@ class TodosServiceTest {
 
         @Test
         fun `reject saves by blocked user`() {
-            userRepository.currentUser = User(
+            userRepository.users["user"] = User(
                 username = "user",
                 status = User.Status.BLOCKED,
             )
@@ -71,7 +71,7 @@ class TodosServiceTest {
 }
 
 class StubUserRepository : UserRepository {
-    var currentUser: User? = null
+    val users: MutableMap<String, User> = mutableMapOf()
 
-    override fun findByName(username: String): User? = currentUser
+    override fun findByName(username: String): User? = users[username]
 }
