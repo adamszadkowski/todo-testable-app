@@ -9,13 +9,14 @@ import pl.allegro.agh.distributedsystems.todo.domain.users.UserRepository
 import pl.allegro.agh.distributedsystems.todo.infrastructure.todos.InMemoryTodosRepository
 import strikt.api.expectThat
 import strikt.api.expectThrows
+import strikt.assertions.hasEntry
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
 import strikt.assertions.message
 
 class TodosServiceTest {
     private val repository = InMemoryTodosRepository()
-    private val userRepository = StubUserRepository()
+    private val userRepository = SpyUserRepository()
     private val service = TodosService(repository, userRepository)
 
     @AfterEach
@@ -66,12 +67,17 @@ class TodosServiceTest {
             expectThrows<TodosService.CannotSaveException> {
                 service.save("user", "todo name")
             }.message.isEqualTo("User is not active")
+            expectThat(userRepository.calls).hasEntry("user", 1)
         }
     }
 }
 
-class StubUserRepository : UserRepository {
+class SpyUserRepository : UserRepository {
     val users: MutableMap<String, User> = mutableMapOf()
+    val calls: MutableMap<String, Int> = mutableMapOf()
 
-    override fun findByName(username: String): User? = users[username]
+    override fun findByName(username: String): User? {
+        calls.compute(username) { _, prev -> (prev ?: 0) + 1 }
+        return users[username]
+    }
 }
