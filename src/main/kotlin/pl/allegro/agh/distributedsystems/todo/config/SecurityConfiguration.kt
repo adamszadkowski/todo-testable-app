@@ -22,7 +22,7 @@ class SecurityConfiguration {
         .csrf { it.disable() }
         .authorizeHttpRequests {
             it
-                .requestMatchers("/todos/**").authenticated()
+                .requestMatchers("/todos/**", "/users/**").authenticated()
                 .requestMatchers(
                     "/swagger-ui/**",
                     "v3/api-docs/**",

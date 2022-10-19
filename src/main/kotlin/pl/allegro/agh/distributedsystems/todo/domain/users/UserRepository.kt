@@ -1,6 +1,7 @@
 package pl.allegro.agh.distributedsystems.todo.domain.users
 
 interface UserRepository {
+    fun save(user: User)
     fun findByName(username: String): User?
 }
 

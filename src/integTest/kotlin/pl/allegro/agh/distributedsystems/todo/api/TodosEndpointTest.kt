@@ -10,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
@@ -18,14 +17,14 @@ import org.springframework.test.web.servlet.post
 @SpringBootTest
 @ActiveProfiles("integration")
 @AutoConfigureMockMvc
-@TestPropertySource(
-    properties = [
-        "app.users[0].username=user",
-        "app.users[0].password=pass",
-        "app.users[0].status=ACTIVE",
-    ]
-)
 class TodosEndpointTest(@Autowired private val mockMvc: MockMvc) {
+
+    @BeforeEach
+    fun `create users`() {
+        createUser("user")
+        createUser("user1")
+        createUser("user2")
+    }
 
     @Test
     fun `get empty todos`() {
@@ -85,6 +84,16 @@ class TodosEndpointTest(@Autowired private val mockMvc: MockMvc) {
                 .andExpect {
                     jsonPath("\$.todos.*.name", contains("new todo", "second todo"))
                 }
+        }
+    }
+
+    private fun createUser(user: String) {
+        mockMvc.post("/users") {
+            with(user("admin"))
+            contentType = MediaType.APPLICATION_JSON
+            content = """ { "user": "$user", "password": "{noop}pass" } """
+        }.andExpect {
+            status { is2xxSuccessful() }
         }
     }
 
