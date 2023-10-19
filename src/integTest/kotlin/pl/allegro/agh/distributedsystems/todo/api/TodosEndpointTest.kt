@@ -50,6 +50,17 @@ class TodosEndpointTest(@Autowired private val mockMvc: MockMvc) {
             }
     }
 
+    @Test
+    fun `fail on empty name`() {
+        mockMvc.post("/todos") {
+            with(user("user"))
+            contentType = MediaType.APPLICATION_JSON
+            content = """ { "name": "" } """
+        }.andExpect {
+            status { is4xxClientError() }
+        }
+    }
+
     @Nested
     inner class `single saved` {
 

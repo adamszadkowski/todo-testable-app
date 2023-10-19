@@ -12,6 +12,8 @@ class TodosService(
 
     fun save(user: String, name: String): Todo = when {
         userRepository.findByName(user)?.status != User.Status.ACTIVE -> throw CannotSaveException("User is not active")
+        name.isEmpty() -> throw CannotSaveException("TODO is too short")
+        name.length >= 100 -> throw CannotSaveException("TODO is too long")
         else -> Todo(
             id = UUID.randomUUID().toString(),
             user = user,

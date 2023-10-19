@@ -9,13 +9,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
 import pl.allegro.agh.distributedsystems.todo.domain.users.User
 import pl.allegro.agh.distributedsystems.todo.domain.users.UserRepository
 import pl.allegro.agh.distributedsystems.todo.infrastructure.todos.InMemoryTodosRepository
+import strikt.api.expectCatching
 import strikt.api.expectThat
 import strikt.api.expectThrows
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
+import strikt.assertions.isSuccess
 import strikt.assertions.message
 
 @ExtendWith(MockKExtension::class)
@@ -51,6 +56,30 @@ class TodosServiceTest(
 
             expectThat(uniqueIds).hasSize(100)
         }
+
+        @Nested
+        inner class `validate length` {
+
+            @ParameterizedTest
+            @CsvSource(
+                "  0, TODO is too short",
+                "100, TODO is too long",
+                "101, TODO is too long",
+            )
+            fun `fail on incorrect length`(length: Int, message: String) {
+                expectThrows<TodosService.CannotSaveException> {
+                    service.save(activeUser, "a".repeat(length))
+                }.message.isEqualTo(message)
+            }
+
+            @ParameterizedTest
+            @ValueSource(ints = [1, 2, 98, 99])
+            fun `pass on correct length`(length: Int) {
+                expectCatching {
+                    service.save(activeUser, "a".repeat(length))
+                }.isSuccess()
+            }
+        }
     }
 
     @Nested
@@ -74,7 +103,7 @@ class TodosServiceTest(
             )
 
             expectThrows<TodosService.CannotSaveException> {
-                service.save("user", "todo name")
+                service.save("user", "")
             }.message.isEqualTo("User is not active")
             verify(exactly = 1) { userRepository.findByName("user") }
         }
